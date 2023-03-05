@@ -1,4 +1,3 @@
-//! Implementation of [`MapArea`] and [`MemorySet`].
 use super::{frame_alloc, FrameTracker};
 use super::{PTEFlags, PageTable, PageTableEntry};
 use super::{PhysAddr, PhysPageNum, VirtAddr, VirtPageNum};
@@ -441,7 +440,7 @@ bitflags! {
     }
 }
 
-/// remap test in kernel space
+/// test map function in page table
 #[allow(unused)]
 pub fn remap_test() {
     let mut kernel_space = KERNEL_SPACE.exclusive_access();

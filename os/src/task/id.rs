@@ -44,7 +44,7 @@ lazy_static! {
     static ref PID_ALLOCATOR: UPSafeCell<RecycleAllocator> =
         unsafe { UPSafeCell::new(RecycleAllocator::new()) };
     static ref KSTACK_ALLOCATOR: UPSafeCell<RecycleAllocator> =
-        unsafe { UPSafeCell::new(RecycleAllocator::new()) };
+        unsafe { UPSafeCell::new(RecycleAllocator::new()) };    
 }
 
 /// Abstract structure of PID

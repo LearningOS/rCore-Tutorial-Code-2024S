@@ -17,7 +17,8 @@ mod context;
 use crate::config::{TRAMPOLINE, TRAP_CONTEXT_BASE};
 use crate::syscall::syscall;
 use crate::task::{
-    current_trap_cx, current_user_token, exit_current_and_run_next, suspend_current_and_run_next,
+    check_signals_error_of_current, current_add_signal, current_trap_cx, current_user_token,
+    exit_current_and_run_next, handle_signals, suspend_current_and_run_next, SignalFlags,
 };
 use crate::timer::set_next_trigger;
 use core::arch::{asm, global_asm};
@@ -77,19 +78,16 @@ pub fn trap_handler() -> ! {
         | Trap::Exception(Exception::InstructionPageFault)
         | Trap::Exception(Exception::LoadFault)
         | Trap::Exception(Exception::LoadPageFault) => {
-            println!(
-                "[kernel] trap_handler:  {:?} in application, bad addr = {:#x}, bad instruction = {:#x}, kernel killed it.",
+            error!(
+                "[kernel] trap_handler: {:?} in application, bad addr = {:#x}, bad instruction = {:#x}, kernel killed it.",
                 scause.cause(),
                 stval,
                 current_trap_cx().sepc,
             );
-            // page fault exit code
-            exit_current_and_run_next(-2);
+            current_add_signal(SignalFlags::SIGSEGV);
         }
         Trap::Exception(Exception::IllegalInstruction) => {
-            println!("[kernel] IllegalInstruction in application, kernel killed it.");
-            // illegal instruction exit code
-            exit_current_and_run_next(-3);
+            current_add_signal(SignalFlags::SIGILL);
         }
         Trap::Interrupt(Interrupt::SupervisorTimer) => {
             set_next_trigger();
@@ -103,7 +101,15 @@ pub fn trap_handler() -> ! {
             );
         }
     }
-    //println!("before trap_return");
+    // handle signals (handle the sent signal)
+    // trace!("[kernel] trap_handler:: handle_signals");
+    handle_signals();
+
+    // check error signals (if error then exit)
+    if let Some((errno, msg)) = check_signals_error_of_current() {
+        trace!("[kernel] trap_handler: .. check signals {}", msg);
+        exit_current_and_run_next(errno);
+    }
     trap_return();
 }
 
