@@ -5,6 +5,7 @@ use core::fmt::{self, Write};
 struct Stdout;
 
 impl Write for Stdout {
+    /// write str to console
     fn write_str(&mut self, s: &str) -> fmt::Result {
         for c in s.chars() {
             console_putchar(c as usize);
@@ -12,12 +13,12 @@ impl Write for Stdout {
         Ok(())
     }
 }
-
+/// print to the host console using the format string and arguments.
 pub fn print(args: fmt::Arguments) {
     Stdout.write_fmt(args).unwrap();
 }
 
-/// Print! to the host console using the format string and arguments.
+/// Print! macro to the host console using the format string and arguments.
 #[macro_export]
 macro_rules! print {
     ($fmt: literal $(, $($arg: tt)+)?) => {
@@ -25,7 +26,7 @@ macro_rules! print {
     }
 }
 
-/// Println! to the host console using the format string and arguments.
+/// Println! macro to the host console using the format string and arguments.
 #[macro_export]
 macro_rules! println {
     ($fmt: literal $(, $($arg: tt)+)?) => {

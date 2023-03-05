@@ -1,4 +1,9 @@
-//! Uniprocessor interior mutability primitives
+//! Safe Cell for uniprocessor（single cpu core）
+//!
+//! UPSafeCell is used to wrap a static data structure which can access safely.
+//!
+//! NOTICE: We should only use it in environment with uniprocessor（single cpu core）, and the kernel can not support task preempting in kernel mode （or trap in kernel mode）.
+
 use core::cell::{RefCell, RefMut};
 
 /// Wrap a static data structure inside it so that we are

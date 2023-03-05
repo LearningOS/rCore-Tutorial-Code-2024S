@@ -4,11 +4,10 @@ mod virtio_blk;
 
 pub use virtio_blk::VirtIOBlock;
 
+use crate::board::BlockDeviceImpl;
 use alloc::sync::Arc;
 use easy_fs::BlockDevice;
 use lazy_static::*;
-
-type BlockDeviceImpl = virtio_blk::VirtIOBlock;
 
 lazy_static! {
     /// The global block device driver instance: BLOCK_DEVICE with BlockDevice trait

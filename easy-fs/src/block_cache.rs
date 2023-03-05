@@ -1,3 +1,5 @@
+//! Block Cache Layer
+//! Implements about the disk block cache functionality
 use super::{BlockDevice, BLOCK_SZ};
 use alloc::collections::VecDeque;
 use alloc::sync::Arc;
@@ -5,7 +7,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 use lazy_static::*;
 use spin::Mutex;
-
+/// BlockCache is a cache for a block in disk.
 pub struct BlockCache {
     cache: Vec<u8>,
     block_id: usize,
@@ -26,11 +28,11 @@ impl BlockCache {
             modified: false,
         }
     }
-
+    /// Get the slice in the block cache according to the offset.
     fn addr_of_offset(&self, offset: usize) -> usize {
         &self.cache[offset] as *const _ as usize
     }
-
+    /// Get a immutable reference to the data in the block cache according to the offset.
     pub fn get_ref<T>(&self, offset: usize) -> &T
     where
         T: Sized,
@@ -40,7 +42,7 @@ impl BlockCache {
         let addr = self.addr_of_offset(offset);
         unsafe { &*(addr as *const T) }
     }
-
+    /// Get a mutable reference to the data in the block cache according to the offset.
     pub fn get_mut<T>(&mut self, offset: usize) -> &mut T
     where
         T: Sized,
@@ -51,15 +53,15 @@ impl BlockCache {
         let addr = self.addr_of_offset(offset);
         unsafe { &mut *(addr as *mut T) }
     }
-
+    /// Read the data from the block cache according to the offset.
     pub fn read<T, V>(&self, offset: usize, f: impl FnOnce(&T) -> V) -> V {
         f(self.get_ref(offset))
     }
-
+    /// Write the data into the block cache according to the offset.
     pub fn modify<T, V>(&mut self, offset: usize, f: impl FnOnce(&mut T) -> V) -> V {
         f(self.get_mut(offset))
     }
-
+    /// Sync(write) the block cache to disk.
     pub fn sync(&mut self) {
         if self.modified {
             self.modified = false;
@@ -76,17 +78,20 @@ impl Drop for BlockCache {
 
 const BLOCK_CACHE_SIZE: usize = 16;
 
+/// BlockCacheManager is a manager for BlockCache.
 pub struct BlockCacheManager {
+    /// (block_id, block_cache)
     queue: VecDeque<(usize, Arc<Mutex<BlockCache>>)>,
 }
 
 impl BlockCacheManager {
+    /// Create a new BlockCacheManager with an empty queue (block_id, block_cache)
     pub fn new() -> Self {
         Self {
             queue: VecDeque::new(),
         }
     }
-
+    /// Get a block cache from the queue. according to the block_id.
     pub fn get_block_cache(
         &mut self,
         block_id: usize,
@@ -121,10 +126,11 @@ impl BlockCacheManager {
 }
 
 lazy_static! {
+    /// BLOCK_CACHE_MANAGER: Glocal instance of BlockCacheManager.
     pub static ref BLOCK_CACHE_MANAGER: Mutex<BlockCacheManager> =
         Mutex::new(BlockCacheManager::new());
 }
-
+/// Get a block cache from the queue. according to the block_id.
 pub fn get_block_cache(
     block_id: usize,
     block_device: Arc<dyn BlockDevice>,
@@ -133,7 +139,7 @@ pub fn get_block_cache(
         .lock()
         .get_block_cache(block_id, block_device)
 }
-
+/// Sync(write) all the block cache to disk.
 pub fn block_cache_sync_all() {
     let manager = BLOCK_CACHE_MANAGER.lock();
     for (_, cache) in manager.queue.iter() {

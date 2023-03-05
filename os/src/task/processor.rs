@@ -6,7 +6,7 @@
 
 use super::__switch;
 use super::{fetch_task, TaskStatus};
-use super::{TaskContext, TaskControlBlock};
+use super::{ProcessControlBlock, TaskContext, TaskControlBlock};
 use crate::sync::UPSafeCell;
 use crate::trap::TrapContext;
 use alloc::sync::Arc;
@@ -14,7 +14,6 @@ use lazy_static::*;
 
 /// Processor management structure
 pub struct Processor {
-    ///The task currently executing on the current processor
     current: Option<Arc<TaskControlBlock>>,
 
     ///The basic control flow of each core, helping to select and switch process
@@ -22,7 +21,6 @@ pub struct Processor {
 }
 
 impl Processor {
-    ///Create an empty Processor
     pub fn new() -> Self {
         Self {
             current: None,
@@ -86,6 +84,11 @@ pub fn current_task() -> Option<Arc<TaskControlBlock>> {
     PROCESSOR.exclusive_access().current()
 }
 
+/// get current process
+pub fn current_process() -> Arc<ProcessControlBlock> {
+    current_task().unwrap().process.upgrade().unwrap()
+}
+
 /// Get the current user token(addr of page table)
 pub fn current_user_token() -> usize {
     let task = current_task().unwrap();
@@ -98,6 +101,22 @@ pub fn current_trap_cx() -> &'static mut TrapContext {
         .unwrap()
         .inner_exclusive_access()
         .get_trap_cx()
+}
+
+/// get the user virtual address of trap context
+pub fn current_trap_cx_user_va() -> usize {
+    current_task()
+        .unwrap()
+        .inner_exclusive_access()
+        .res
+        .as_ref()
+        .unwrap()
+        .trap_cx_user_va()
+}
+
+/// get the top addr of kernel stack
+pub fn current_kstack_top() -> usize {
+    current_task().unwrap().kstack.get_top()
 }
 
 /// Return to idle control flow for new scheduling

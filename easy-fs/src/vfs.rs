@@ -1,3 +1,8 @@
+//! index node(inode, namely file control block) layer
+//!
+//! The data struct and functions for the inode layer that service file-related system calls
+//!
+//! NOTICE: The difference between [`Inode`] and [`DiskInode`]  can be seen from their names: DiskInode in a relatively fixed location within the disk block, while Inode Is a data structure placed in memory that records file inode information.
 use super::{
     block_cache_sync_all, get_block_cache, BlockDevice, DirEntry, DiskInode, DiskInodeType,
     EasyFileSystem, DIRENT_SZ,
@@ -7,14 +12,21 @@ use alloc::sync::Arc;
 use alloc::vec::Vec;
 use spin::{Mutex, MutexGuard};
 
+/// Inode struct in memory
 pub struct Inode {
+    /// The block id of the inode
     block_id: usize,
+    /// The offset of the inode in the block
     block_offset: usize,
+    /// The file system
     fs: Arc<Mutex<EasyFileSystem>>,
+    /// The block device
     block_device: Arc<dyn BlockDevice>,
 }
 
 impl Inode {
+    /// Create a new Disk Inode
+    ///
     /// We should not acquire efs lock here.
     pub fn new(
         block_id: u32,
@@ -29,19 +41,19 @@ impl Inode {
             block_device,
         }
     }
-
+    /// read the content of the disk inode on disk with 'f' function
     fn read_disk_inode<V>(&self, f: impl FnOnce(&DiskInode) -> V) -> V {
         get_block_cache(self.block_id, Arc::clone(&self.block_device))
             .lock()
             .read(self.block_offset, f)
     }
-
+    /// modify the content of the disk inode on disk with 'f' function
     fn modify_disk_inode<V>(&self, f: impl FnOnce(&mut DiskInode) -> V) -> V {
         get_block_cache(self.block_id, Arc::clone(&self.block_device))
             .lock()
             .modify(self.block_offset, f)
     }
-
+    /// find the disk inode id according to the file with 'name' by search the directory entries in the disk inode with Directory type
     fn find_inode_id(&self, name: &str, disk_inode: &DiskInode) -> Option<u32> {
         // assert it is a directory
         assert!(disk_inode.is_dir());
@@ -58,7 +70,7 @@ impl Inode {
         }
         None
     }
-
+    /// find the disk inode of the file with 'name'
     pub fn find(&self, name: &str) -> Option<Arc<Inode>> {
         let fs = self.fs.lock();
         self.read_disk_inode(|disk_inode| {
@@ -73,7 +85,7 @@ impl Inode {
             })
         })
     }
-
+    /// increase the size of file( also known as 'disk inode')
     fn increase_size(
         &self,
         new_size: u32,
@@ -90,7 +102,7 @@ impl Inode {
         }
         disk_inode.increase_size(new_size, v, &self.block_device);
     }
-
+    /// create a file with 'name' in the root directory
     pub fn create(&self, name: &str) -> Option<Arc<Inode>> {
         let mut fs = self.fs.lock();
         let op = |root_inode: &mut DiskInode| {
@@ -138,7 +150,9 @@ impl Inode {
         )))
         // release efs lock automatically by compiler
     }
-
+    /// create a directory with 'name' in the root directory
+    ///
+    /// list the file names in the root directory
     pub fn ls(&self) -> Vec<String> {
         let _fs = self.fs.lock();
         self.read_disk_inode(|disk_inode| {
@@ -155,12 +169,12 @@ impl Inode {
             v
         })
     }
-
+    /// Read the content in offset position of the file into 'buf'
     pub fn read_at(&self, offset: usize, buf: &mut [u8]) -> usize {
         let _fs = self.fs.lock();
         self.read_disk_inode(|disk_inode| disk_inode.read_at(offset, buf, &self.block_device))
     }
-
+    /// Write the content in 'buf' into offset position of the file
     pub fn write_at(&self, offset: usize, buf: &[u8]) -> usize {
         let mut fs = self.fs.lock();
         let size = self.modify_disk_inode(|disk_inode| {
@@ -170,7 +184,7 @@ impl Inode {
         block_cache_sync_all();
         size
     }
-
+    /// Set the file(disk inode) length to zero, delloc all data blocks of the file.
     pub fn clear(&self) {
         let mut fs = self.fs.lock();
         self.modify_disk_inode(|disk_inode| {
