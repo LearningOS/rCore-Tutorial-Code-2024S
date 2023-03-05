@@ -1,9 +1,12 @@
 //! SBI call wrappers
 
+#![allow(unused)]
+
 use core::arch::asm;
 
 const SBI_SET_TIMER: usize = 0;
 const SBI_CONSOLE_PUTCHAR: usize = 1;
+const SBI_CONSOLE_GETCHAR: usize = 2;
 const SBI_SHUTDOWN: usize = 8;
 
 /// general sbi call
@@ -31,6 +34,11 @@ pub fn set_timer(timer: usize) {
 /// use sbi call to putchar in console (qemu uart handler)
 pub fn console_putchar(c: usize) {
     sbi_call(SBI_CONSOLE_PUTCHAR, c, 0, 0);
+}
+
+/// use sbi call to getchar from console (qemu uart handler)
+pub fn console_getchar() -> usize {
+    sbi_call(SBI_CONSOLE_GETCHAR, 0, 0, 0)
 }
 
 /// use sbi call to shutdown the kernel

@@ -29,6 +29,9 @@ BASE ?= 1
 # Disassembly
 DISASM ?= -x
 
+# Run usertests or usershell
+TEST ?=
+
 build: env $(KERNEL_BIN)
 
 env:
@@ -43,7 +46,7 @@ $(KERNEL_BIN): kernel
 kernel:
 	@make -C ../user build TEST=$(TEST) CHAPTER=$(CHAPTER) BASE=$(BASE)
 	@echo Platform: $(BOARD)
-	@cargo build $(MODE_ARG)
+	@cargo build --release
 
 clean:
 	@cargo clean
