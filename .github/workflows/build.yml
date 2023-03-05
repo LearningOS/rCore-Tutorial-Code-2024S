@@ -1,0 +1,51 @@
+name: Jobs
+
+on: [push]
+
+env:
+  CARGO_TERM_COLOR: always
+  rust_toolchain: nightly-2022-08-05
+
+jobs:
+  build-doc:
+    if: github.repository == 'LearningOS/rCore-Tutorial-Code-2023S'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build doc
+        run: |
+          cd os
+          make
+          cargo doc --no-deps --verbose
+      - name: Push to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./os/target/riscv64gc-unknown-none-elf/doc
+          destination_dir: ${{ github.ref_name }}
+  basic-test:
+    runs-on: ubuntu-latest
+    container:
+      image: duskmoon/dev-env:rcore-ci
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run tests
+        run: |
+          qemu-system-riscv64 --version
+          rustup target add riscv64gc-unknown-none-elf
+          cd os && make run
+  gitlab-mirror:
+    if: github.repository == 'LearningOS/rCore-Tutorial-Code-2023S'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Mirror + trigger CI
+      uses: Gallium70/gitlab-mirror-and-ci-action@master
+      with:
+        args: "https://git.tsinghua.edu.cn/os-lab/2023s/public/rcore-tutorial-code-2023s"
+      env:
+        GITLAB_HOSTNAME: "git.tsinghua.edu.cn"
+        GITLAB_PROJECT_ID: "20881"
+        GITLAB_PROJECT_NAME: "rcore-tutorial-code-2023s"
+        GITLAB_PROJECT_TOKEN: ${{secrets.GITLAB_PROJECT_TOKEN}}
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
