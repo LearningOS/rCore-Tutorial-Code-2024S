@@ -4,6 +4,7 @@
 //! important ones are:
 //!
 //! - [`trap`]: Handles all cases of switching from userspace to the kernel
+//! - [`task`]: Task management
 //! - [`syscall`]: System call handling and implementation
 //!
 //! The operating system also starts in this module. Kernel code starts
@@ -11,7 +12,7 @@
 //! initialize various pieces of functionality. (See its source code for
 //! details.)
 //!
-//! We then call [`batch::run_next_app()`] and for the first time go to
+//! We then call [`task::run_first_task()`] and for the first time go to
 //! userspace.
 
 #![deny(missing_docs)]
@@ -19,25 +20,29 @@
 #![no_std]
 #![no_main]
 #![feature(panic_info_message)]
+#![feature(alloc_error_handler)]
+
 #[macro_use]
 extern crate log;
 
-use core::arch::global_asm;
-#[path = "boards/qemu.rs"]
-mod board;
-use log::*;
+extern crate alloc;
+
 #[macro_use]
 mod console;
-pub mod batch;
+pub mod config;
+mod heap_alloc;
 pub mod lang_items;
+mod loader;
 pub mod logging;
 pub mod sbi;
 pub mod sync;
 pub mod syscall;
+pub mod task;
+pub mod timer;
 pub mod trap;
 
-global_asm!(include_str!("entry.asm"));
-global_asm!(include_str!("link_app.S"));
+core::arch::global_asm!(include_str!("entry.asm"));
+core::arch::global_asm!(include_str!("link_app.S"));
 
 /// clear BSS segment
 fn clear_bss() {
@@ -51,9 +56,8 @@ fn clear_bss() {
     }
 }
 
-/// the rust entry-point of os
-#[no_mangle]
-pub fn rust_main() -> ! {
+/// kernel log info
+fn kernel_log_info() {
     extern "C" {
         fn stext(); // begin addr of text segment
         fn etext(); // end addr of text segment
@@ -66,7 +70,6 @@ pub fn rust_main() -> ! {
         fn boot_stack_lower_bound(); // stack lower bound
         fn boot_stack_top(); // stack top
     }
-    clear_bss();
     logging::init();
     println!("[kernel] Hello, world!");
     trace!(
@@ -87,7 +90,18 @@ pub fn rust_main() -> ! {
         boot_stack_top as usize, boot_stack_lower_bound as usize
     );
     error!("[kernel] .bss [{:#x}, {:#x})", sbss as usize, ebss as usize);
+}
+
+#[no_mangle]
+/// the rust entry-point of os
+pub fn rust_main() -> ! {
+    clear_bss();
+    kernel_log_info();
+    heap_alloc::init_heap();
     trap::init();
-    batch::init();
-    batch::run_next_app();
+    loader::load_apps();
+    trap::enable_timer_interrupt();
+    timer::set_next_trigger();
+    task::run_first_task();
+    panic!("Unreachable in rust_main!");
 }

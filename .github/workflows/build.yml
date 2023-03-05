@@ -26,6 +26,8 @@ jobs:
           destination_dir: ${{ github.ref_name }}
   basic-test:
     runs-on: ubuntu-latest
+    outputs:
+      points: ${{ steps.end.outputs.points}}
     container:
       image: duskmoon/dev-env:rcore-ci
     steps:
@@ -38,7 +40,13 @@ jobs:
           git clone https://github.com/LearningOS/rCore-Tutorial-Checker-2023S.git ci-user
           git clone https://github.com/LearningOS/rCore-Tutorial-Test-2023S.git ci-user/user
           ID=`git rev-parse --abbrev-ref HEAD | grep -oP 'ch\K[0-9]'`
-          cd ci-user && make test CHAPTER=$ID passwd=${{ secrets.BASE_TEST_TOKEN }}
+          cd ci-user && make test CHAPTER=$ID passwd=${{ secrets.BASE_TEST_TOKEN }} > ../output.txt
+          cat ../output.txt
+      - name: end
+        id: end
+        run: |
+          cat output.txt | grep -a "Test passed" | grep -oP "\d{1,}/\d{1,}" | xargs -i echo "points={}"
+          cat output.txt | grep -a "Test passed" | grep -oP "\d{1,}/\d{1,}" | xargs -i echo "points={}" >> $GITHUB_OUTPUT
   gitlab-mirror:
     if: github.repository == 'LearningOS/rCore-Tutorial-Code-2023S'
     runs-on: ubuntu-latest
@@ -52,5 +60,29 @@ jobs:
         GITLAB_HOSTNAME: "git.tsinghua.edu.cn"
         GITLAB_PROJECT_ID: "20881"
         GITLAB_PROJECT_NAME: "rcore-tutorial-code-2023s"
-        GITLAB_PROJECT_TOKEN: ${{secrets.GITLAB_PROJECT_TOKEN}}
-        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        GITLAB_PROJECT_TOKEN: ${{ secrets.GITLAB_PROJECT_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  deploy:
+    if: github.repository != 'LearningOS/rCore-Tutorial-Code-2023S'
+    name: Deploy to pages
+    needs: basic-test
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v3
+        continue-on-error: true
+        with:
+          ref: 'gh-pages'
+      - name: Save Log File
+        uses: yfblock/multi-rank-log@main
+        with:
+          public-dir: classroom
+          points: ${{ needs.basic-test.outputs.points }}
+      - name: GitHub Pages
+        uses: crazy-max/ghaction-github-pages@v3
+        with:
+          target_branch: gh-pages
+          build_dir: ./classroom
+          keep_history: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
