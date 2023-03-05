@@ -1,6 +1,6 @@
 //! Implementation of [`TaskContext`]
+use crate::trap::trap_return;
 
-#[derive(Copy, Clone)]
 #[repr(C)]
 /// task context structure containing some registers
 pub struct TaskContext {
@@ -22,12 +22,9 @@ impl TaskContext {
         }
     }
     /// Create a new task context with a trap return addr and a kernel stack pointer
-    pub fn goto_restore(kstack_ptr: usize) -> Self {
-        extern "C" {
-            fn __restore();
-        }
+    pub fn goto_trap_return(kstack_ptr: usize) -> Self {
         Self {
-            ra: __restore as usize,
+            ra: trap_return as usize,
             sp: kstack_ptr,
             s: [0; 12],
         }
