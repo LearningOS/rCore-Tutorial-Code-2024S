@@ -36,8 +36,11 @@ pub fn init() {
 }
 /// set trap entry for traps happen in kernel(supervisor) mode
 fn set_kernel_trap_entry() {
+    extern "C" {
+        fn __trap_from_kernel();
+    }
     unsafe {
-        stvec::write(trap_from_kernel as usize, TrapMode::Direct);
+        stvec::write(__trap_from_kernel as usize, TrapMode::Direct);
     }
 }
 /// set trap entry for traps happen in user mode

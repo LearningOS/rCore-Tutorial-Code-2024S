@@ -79,6 +79,9 @@ impl MemorySet {
         {
             area.unmap(&mut self.page_table);
             self.areas.remove(idx);
+            unsafe {
+                asm!("sfence.vma");
+            }
         }
     }
     /// Add a new MapArea into this MemorySet.

@@ -11,6 +11,9 @@ use lazy_static::*;
 ///A array of `TaskControlBlock` that is thread-safe
 pub struct TaskManager {
     ready_queue: VecDeque<Arc<TaskControlBlock>>,
+    
+    /// The stopping task, leave a reference so that the kernel stack will not be recycled when switching tasks
+    stop_task: Option<Arc<TaskControlBlock>>,
 }
 
 /// A simple FIFO scheduler.
@@ -19,6 +22,7 @@ impl TaskManager {
     pub fn new() -> Self {
         Self {
             ready_queue: VecDeque::new(),
+            stop_task: None,
         }
     }
     /// Add process back to ready queue
@@ -39,6 +43,14 @@ impl TaskManager {
             self.ready_queue.remove(id);
         }
     }
+    /// Add a task to stopping task
+    pub fn add_stop(&mut self, task: Arc<TaskControlBlock>) {
+        // NOTE: as the last stopping task has completely stopped (not
+        // using kernel stack any more, at least in the single-core
+        // case) so that we can simply replace it;
+        self.stop_task = Some(task);
+    }
+
 }
 
 lazy_static! {
@@ -75,6 +87,11 @@ pub fn remove_task(task: Arc<TaskControlBlock>) {
 pub fn fetch_task() -> Option<Arc<TaskControlBlock>> {
     //trace!("kernel: TaskManager::fetch_task");
     TASK_MANAGER.exclusive_access().fetch()
+}
+
+/// Set a task to stop-wait status, waiting for its kernel stack out of use.
+pub fn add_stopping_task(task: Arc<TaskControlBlock>) {
+    TASK_MANAGER.exclusive_access().add_stop(task);
 }
 
 /// Get process by pid

@@ -21,6 +21,7 @@ mod task;
 
 use self::id::TaskUserRes;
 use crate::fs::{open_file, OpenFlags};
+use crate::task::manager::add_stopping_task;
 use crate::timer::remove_timer;
 use alloc::{sync::Arc, vec::Vec};
 use lazy_static::*;
@@ -86,7 +87,13 @@ pub fn exit_current_and_run_next(exit_code: i32) {
     // here we do not remove the thread since we are still using the kstack
     // it will be deallocated when sys_waittid is called
     drop(task_inner);
-    drop(task);
+
+    // Move the task to stop-wait status, to avoid kernel stack from being freed
+    if tid == 0 {
+        add_stopping_task(task);
+    } else {
+        drop(task);
+    }
     // however, if this is the main thread of current process
     // the process should terminate at once
     if tid == 0 {
