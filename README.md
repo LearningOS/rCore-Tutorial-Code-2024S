@@ -31,8 +31,8 @@
 $ git clone https://github.com/LearningOS/rCore-Tutorial-Code-2023S.git
 $ cd rCore-Tutorial-Code-2023S
 $ git clone https://github.com/LearningOS/rCore-Tutorial-Test-2023S.git user
-$ cd os
 $ git checkout ch$ID
+$ cd os
 # run OS in ch$ID
 $ make run
 ```
