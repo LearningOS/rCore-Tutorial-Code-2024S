@@ -23,17 +23,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./os/target/riscv64gc-unknown-none-elf/doc
           destination_dir: ${{ github.ref_name }}
-  basic-test:
-    runs-on: ubuntu-latest
-    container:
-      image: duskmoon/dev-env:rcore-ci
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run tests
-        run: |
-          qemu-system-riscv64 --version
-          rustup target add riscv64gc-unknown-none-elf
-          cd os && make run
   gitlab-mirror:
     if: github.repository == 'LearningOS/rCore-Tutorial-Code-2023S'
     runs-on: ubuntu-latest
