@@ -36,7 +36,7 @@ jobs:
         run: |
           qemu-system-riscv64 --version
           rustup target add riscv64gc-unknown-none-elf
-          git config --global --add safe.directory /__w/rCore-Tutorial-Code-2023S/rCore-Tutorial-Code-2023S
+          git config --global --add safe.directory /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
           git clone https://github.com/LearningOS/rCore-Tutorial-Checker-2023S.git ci-user
           git clone https://github.com/LearningOS/rCore-Tutorial-Test-2023S.git ci-user/user
           ID=`git rev-parse --abbrev-ref HEAD | grep -oP 'ch\K[0-9]'`
