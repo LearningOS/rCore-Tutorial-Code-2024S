@@ -4,17 +4,17 @@ on: [push]
 
 env:
   CARGO_TERM_COLOR: always
-  rust_toolchain: nightly-2022-08-05
+  rust_toolchain: nightly
 
 jobs:
   build-doc:
-    if: github.repository == 'LearningOS/rCore-Tutorial-Code-2023S'
+    if: github.repository == 'LearningOS/rCore-Tutorial-Code-2023A'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Build doc
         run: |
-          git clone https://github.com/LearningOS/rCore-Tutorial-Test-2023S.git user
+          git clone https://github.com/LearningOS/rCore-Tutorial-Test-2023A.git user
           cd os
           make
           cargo doc --no-deps --verbose
@@ -25,17 +25,17 @@ jobs:
           publish_dir: ./os/target/riscv64gc-unknown-none-elf/doc
           destination_dir: ${{ github.ref_name }}
   gitlab-mirror:
-    if: github.repository == 'LearningOS/rCore-Tutorial-Code-2023S'
+    if: github.repository == 'LearningOS/rCore-Tutorial-Code-2023A'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v4
     - name: Mirror + trigger CI
-      uses: Gallium70/gitlab-mirror-and-ci-action@master
+      uses: tkf2019/gitlab-mirror-and-ci-action@master
       with:
-        args: "https://git.tsinghua.edu.cn/os-lab/2023s/public/rcore-tutorial-code-2023s"
+        args: "https://git.tsinghua.edu.cn/os-lab/2023a/public/rcore-tutorial-code-2023a"
       env:
         GITLAB_HOSTNAME: "git.tsinghua.edu.cn"
-        GITLAB_PROJECT_ID: "20881"
-        GITLAB_PROJECT_NAME: "rcore-tutorial-code-2023s"
+        GITLAB_PROJECT_ID: "26334"
+        GITLAB_PROJECT_NAME: "rcore-tutorial-code-2023a"
         GITLAB_PROJECT_TOKEN: ${{secrets.GITLAB_PROJECT_TOKEN}}
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
