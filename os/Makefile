@@ -52,7 +52,7 @@ fs-img: $(APPS)
 
 kernel:
 	@echo Platform: $(BOARD)
-	@cargo build --release
+	@cargo build $(MODE_ARG)
 
 clean:
 	@cargo clean
