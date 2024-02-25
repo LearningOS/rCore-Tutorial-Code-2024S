@@ -73,5 +73,18 @@ RUN rustup --version && \
     cargo --version && \
     rustc --version
 
+# 2.3 Env
+RUN cargo install cargo-binutils; \
+    rustup target add riscv64gc-unknown-none-elf; \
+	rustup component add rust-src; \
+	rustup component add llvm-tools-preview; \
+	rustup component add rustfmt; \
+	rustup component add clippy;
+
+# 3. Cargo vendor
+WORKDIR ${HOME}
+COPY os/vendor ./os-vendor
+COPY user/vendor ./user-vendor
+
 # Ready to go
 WORKDIR ${HOME}
