@@ -1,6 +1,6 @@
 //! Global logger
 
-use log::{self, Level, LevelFilter, Log, Metadata, Record};
+use log::{Level, LevelFilter, Log, Metadata, Record};
 
 /// a simple logger
 struct SimpleLogger;
