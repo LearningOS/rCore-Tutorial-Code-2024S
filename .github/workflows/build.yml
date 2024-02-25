@@ -8,13 +8,13 @@ env:
 
 jobs:
   build-doc:
-    if: github.repository == 'LearningOS/rCore-Tutorial-Code-2023A'
+    if: github.repository == 'LearningOS/rCore-Tutorial-Code-2024S'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Build doc
         run: |
-          git clone https://github.com/LearningOS/rCore-Tutorial-Test-2023A.git user
+          git clone https://github.com/LearningOS/rCore-Tutorial-Test-2024S.git user
           cd os
           make
           cargo doc --no-deps --verbose
@@ -37,8 +37,8 @@ jobs:
           qemu-system-riscv64 --version
           rustup target add riscv64gc-unknown-none-elf
           git config --global --add safe.directory /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
-          git clone https://github.com/LearningOS/rCore-Tutorial-Checker-2023A.git ci-user
-          git clone https://github.com/LearningOS/rCore-Tutorial-Test-2023A.git ci-user/user
+          git clone https://github.com/LearningOS/rCore-Tutorial-Checker-2024S.git ci-user
+          git clone https://github.com/LearningOS/rCore-Tutorial-Test-2024S.git ci-user/user
           ID=`git rev-parse --abbrev-ref HEAD | grep -oP 'ch\K[0-9]'`
           cd ci-user && make test CHAPTER=$ID passwd=${{ secrets.BASE_TEST_TOKEN }} > ../output.txt
           # cd ci-user && make test CHAPTER=$ID passwd=${{ secrets.BASE_TEST_TOKEN }}
@@ -49,22 +49,22 @@ jobs:
           cat output.txt | grep -a "Test passed" | grep -oP "\d{1,}/\d{1,}" | xargs -i echo "points={}"
           cat output.txt | grep -a "Test passed" | grep -oP "\d{1,}/\d{1,}" | xargs -i echo "points={}" >> $GITHUB_OUTPUT
   gitlab-mirror:
-    if: github.repository == 'LearningOS/rCore-Tutorial-Code-2023A'
+    if: github.repository == 'LearningOS/rCore-Tutorial-Code-2024S'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v1
     - name: Mirror + trigger CI
       uses: tkf2019/gitlab-mirror-and-ci-action@master
       with:
-        args: "https://git.tsinghua.edu.cn/os-lab/2023a/public/rcore-tutorial-code-2023a"
+        args: "https://git.tsinghua.edu.cn/os-lab/2024s/public/rcore-tutorial-code"
       env:
         GITLAB_HOSTNAME: "git.tsinghua.edu.cn"
-        GITLAB_PROJECT_ID: "26334"
-        GITLAB_PROJECT_NAME: "rcore-tutorial-code-2023a"
-        GITLAB_PROJECT_TOKEN: ${{ secrets.GITLAB_PROJECT_TOKEN }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITLAB_PROJECT_ID: "29091"
+        GITLAB_PROJECT_NAME: "rcore-tutorial-code"
+        GITLAB_PROJECT_TOKEN: ${{secrets.GITLAB_PROJECT_TOKEN}}
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   deploy:
-    if: github.repository != 'LearningOS/rCore-Tutorial-Code-2023A'
+    if: github.repository != 'LearningOS/rCore-Tutorial-Code-2024S'
     name: Deploy to pages
     needs: basic-test
     runs-on: ubuntu-latest
