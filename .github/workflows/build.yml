@@ -8,7 +8,7 @@ env:
 
 jobs:
   build-doc:
-    if: github.repository == 'LearningOS/rCore-Tutorial-Code-2023A'
+    if: github.repository == 'LearningOS/rCore-Tutorial-Code-2024S'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,17 +24,17 @@ jobs:
           publish_dir: ./os/target/riscv64gc-unknown-none-elf/doc
           destination_dir: ${{ github.ref_name }}
   gitlab-mirror:
-    if: github.repository == 'LearningOS/rCore-Tutorial-Code-2023A'
+    if: github.repository == 'LearningOS/rCore-Tutorial-Code-2024S'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v1
     - name: Mirror + trigger CI
       uses: tkf2019/gitlab-mirror-and-ci-action@master
       with:
-        args: "https://git.tsinghua.edu.cn/os-lab/2023a/public/rcore-tutorial-code-2023a"
+        args: "https://git.tsinghua.edu.cn/os-lab/2024s/public/rcore-tutorial-code"
       env:
         GITLAB_HOSTNAME: "git.tsinghua.edu.cn"
-        GITLAB_PROJECT_ID: "26334"
-        GITLAB_PROJECT_NAME: "rcore-tutorial-code-2023a"
+        GITLAB_PROJECT_ID: "29091"
+        GITLAB_PROJECT_NAME: "rcore-tutorial-code"
         GITLAB_PROJECT_TOKEN: ${{secrets.GITLAB_PROJECT_TOKEN}}
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
