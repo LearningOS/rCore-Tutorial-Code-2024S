@@ -73,13 +73,18 @@ RUN rustup --version && \
     cargo --version && \
     rustc --version
 
-# 3. Build env for labs
-# See os1/Makefile `env:` for example.
-# This avoids having to wait for these steps each time using a new container.
-RUN rustup target add riscv64gc-unknown-none-elf && \
-    cargo install cargo-binutils --vers ~0.2 && \
-    rustup component add rust-src && \
-    rustup component add llvm-tools-preview
+# 2.3 Env
+RUN cargo install cargo-binutils; \
+    rustup target add riscv64gc-unknown-none-elf; \
+	rustup component add rust-src; \
+	rustup component add llvm-tools-preview; \
+	rustup component add rustfmt; \
+	rustup component add clippy;
+
+# 3. Cargo vendor
+WORKDIR ${HOME}
+COPY os/vendor ./os-vendor
+COPY user/vendor ./user-vendor
 
 # Ready to go
 WORKDIR ${HOME}
