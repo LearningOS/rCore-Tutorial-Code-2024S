@@ -1,5 +1,5 @@
 default:
-  image: duskmoon/dev-env:rcore-ci
+  image: tkf2023/env:rcore-ci
 
 stages:
   - test
