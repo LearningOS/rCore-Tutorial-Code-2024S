@@ -4,6 +4,7 @@ MODE := release
 KERNEL_ELF := target/$(TARGET)/$(MODE)/os
 KERNEL_BIN := $(KERNEL_ELF).bin
 DISASM_TMP := target/$(TARGET)/$(MODE)/asm
+OFFLINE :=
 
 # BOARD
 BOARD := qemu
@@ -32,10 +33,12 @@ DISASM ?= -x
 build: env $(KERNEL_BIN)
 
 env:
+ifeq ($(OFFLINE),)
 	(rustup target list | grep "riscv64gc-unknown-none-elf (installed)") || rustup target add $(TARGET)
 	cargo install cargo-binutils
 	rustup component add rust-src
 	rustup component add llvm-tools-preview
+endif
 
 $(KERNEL_BIN): kernel
 	@$(OBJCOPY) $(KERNEL_ELF) --strip-all -O binary $@
