@@ -6,6 +6,7 @@ KERNEL_BIN := $(KERNEL_ELF).bin
 DISASM_TMP := target/$(TARGET)/$(MODE)/asm
 FS_IMG := ../user/target/$(TARGET)/$(MODE)/fs.img
 APPS := ../user/src/bin/*
+OFFLINE :=
 
 # BOARD
 BOARD := qemu
@@ -37,10 +38,12 @@ TEST ?=
 build: env $(KERNEL_BIN) fs-img 
 
 env:
+ifeq ($(OFFLINE),)
 	(rustup target list | grep "riscv64gc-unknown-none-elf (installed)") || rustup target add $(TARGET)
 	cargo install cargo-binutils
 	rustup component add rust-src
 	rustup component add llvm-tools-preview
+endif
 
 $(KERNEL_BIN): kernel
 	@$(OBJCOPY) $(KERNEL_ELF) --strip-all -O binary $@
