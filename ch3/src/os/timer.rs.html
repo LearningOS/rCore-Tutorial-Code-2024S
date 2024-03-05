@@ -57,7 +57,7 @@
 <span class="doccomment">/// get current time in milliseconds
 </span><span class="attr">#[allow(dead_code)]
 </span><span class="kw">pub fn </span>get_time_ms() -&gt; usize {
-    time::read() / (CLOCK_FREQ / MSEC_PER_SEC)
+    time::read() * MSEC_PER_SEC / CLOCK_FREQ
 }
 
 <span class="doccomment">/// get current time in microseconds
