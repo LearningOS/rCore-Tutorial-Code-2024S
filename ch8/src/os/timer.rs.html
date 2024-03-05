@@ -144,12 +144,12 @@
 
 <span class="doccomment">/// Get the current time in milliseconds
 </span><span class="kw">pub fn </span>get_time_ms() -&gt; usize {
-    time::read() / (CLOCK_FREQ / MSEC_PER_SEC)
+    time::read() * MSEC_PER_SEC / CLOCK_FREQ
 }
 
 <span class="doccomment">/// get current time in microseconds
 </span><span class="kw">pub fn </span>get_time_us() -&gt; usize {
-    time::read() / (CLOCK_FREQ / MICRO_PER_SEC)
+    time::read() * MICRO_PER_SEC / CLOCK_FREQ
 }
 
 <span class="doccomment">/// Set the next timer interrupt
